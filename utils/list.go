@@ -15,25 +15,13 @@ import (
 
 func List(c *cli.Context) error {
 	_ = c
-	out, err := exec.Command("git", "branch", "-a").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	b := strings.Split(string(out), "\n")
 	// branches := []string{}
 
 	menu := gocliselect.NewMenu("Select branch")
-	menu.AddItem("Cancel", "cancel")
+	menu.AddItem("Switch branch", "switch")
 	menu.AddItem("Create new branch", "create")
-
-	for _, branch := range b {
-		if branch == "" {
-			continue
-		}
-		// branches = append(branches, branch)
-		menu.AddItem(branch, branch)
-	}
+	menu.AddItem("Delete branch", "delete")
+	menu.AddItem("Cancel", "cancel")
 
 	cmd := exec.Command("clear") // Linux example, its tested
 	cmd.Stdout = os.Stdout
@@ -53,11 +41,41 @@ func List(c *cli.Context) error {
 			}
 			log.Fatal(err)
 		}
-		return err
+	case "delete":
+		name := listBranches("Select a branch to delete")
+		fmt.Println(name)
+	case "switch":
+		name := listBranches("Select a branch to change to")
+		fmt.Println(name)
 	default:
 		fmt.Println(choice)
-		return nil
 	}
+	return nil
+}
+
+func listBranches(title string) string {
+	menu := gocliselect.NewMenu(title)
+	cmd := exec.Command("clear") // Linux example, its tested
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+
+	out, err := exec.Command("git", "branch", "-a").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b := strings.Split(string(out), "\n")
+	for _, branch := range b {
+		if branch == "" {
+			continue
+		}
+		// branches = append(branches, branch)
+		menu.AddItem(branch, branch)
+	}
+
+	choice := menu.Display()
+
+	return choice
 }
 
 func getBranchName() string {
